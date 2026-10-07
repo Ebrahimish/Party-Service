@@ -30,3 +30,12 @@ jobs:
 
       - name: Build and Test
         run: ./mvnw clean verify
+
+        - name: Code vulnerability scanning
+  uses: anchore/scan-action@v3
+  id: scan
+  with:
+    path: "${{ github.workspace }}"
+    fail-build: false
+    severity-cutoff: high
+    acs-report-enable: true
