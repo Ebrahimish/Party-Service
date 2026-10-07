@@ -13,6 +13,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      security-events: write
+
     steps:
 
       - name: Get Source Code
@@ -25,17 +29,22 @@ jobs:
           java-version: '17'
           cache: maven
 
+      - name: Code vulnerability scanning
+        uses: anchore/scan-action@v7
+        id: scan
+        with:
+          path: "."
+          fail-build: false
+          severity-cutoff: high
+
+      - name: Upload vulnerability report
+        uses: github/codeql-action/upload-sarif@v4
+        if: success() || failure()
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
+
       - name: Give permission to Maven Wrapper
         run: chmod +x mvnw
 
       - name: Build and Test
         run: ./mvnw clean verify
-
-        - name: Code vulnerability scanning
-  uses: anchore/scan-action@v3
-  id: scan
-  with:
-    path: "${{ github.workspace }}"
-    fail-build: false
-    severity-cutoff: high
-    acs-report-enable: true
